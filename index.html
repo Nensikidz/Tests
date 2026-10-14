@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><style>body{margin:0;font:14px system-ui}[hidden]{display:none!important}</style>
+<title>Тест по биохимии</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: one centered column. Question card on top, the "chain" of numbered question dots (one residue per question) below it. */
+  :root {
+    --bg: #F2F5F7;
+    --surface: #FFFFFF;
+    --ink: #14222B;
+    --muted: #586873;
+    --line: #D3DDE3;
+    --accent: #0F6E7C;
+    --accent-ink: #FFFFFF;
+    --sel: #E0F0F2;
+    --ok: #176B3E;
+    --ok-bg: #E3F3EA;
+    --ok-solid: #1B7A47;
+    --bad: #A3231C;
+    --bad-bg: #FBE8E6;
+    --bad-solid: #B3261E;
+    --on-solid: #FFFFFF;
+    --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0F171C; --surface: #17222A; --ink: #E6EEF2; --muted: #93A4AF; --line: #2A3A45;
+      --accent: #4FB3C2; --accent-ink: #0B1A1F; --sel: #173540;
+      --ok: #7BD6A1; --ok-bg: #14301F; --ok-solid: #5CC48A;
+      --bad: #F4A29B; --bad-bg: #3A1D1B; --bad-solid: #EF7F76; --on-solid: #0B1A1F;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F171C; --surface: #17222A; --ink: #E6EEF2; --muted: #93A4AF; --line: #2A3A45;
+    --accent: #4FB3C2; --accent-ink: #0B1A1F; --sel: #173540;
+    --ok: #7BD6A1; --ok-bg: #14301F; --ok-solid: #5CC48A;
+    --bad: #F4A29B; --bad-bg: #3A1D1B; --bad-solid: #EF7F76; --on-solid: #0B1A1F;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 400 16px/1.5 var(--font-body);
+    padding-inline: 16px; padding-block: 20px 48px;
+  }
+  .wrap { max-width: 720px; margin-inline: auto; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  h1, h2, h3, p { margin: 0; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .mark, .timer, .hint, .tag, .legend { font-family: var(--font-mono); font-size: 13px; letter-spacing: .04em; color: var(--muted); }
+  .mark { text-transform: uppercase; }
+  .mark b { color: var(--ink); font-weight: 500; }
+  .timer { font-variant-numeric: tabular-nums; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .hero h1 { font-size: clamp(28px, 7vw, 40px); line-height: 1.1; font-weight: 600; text-wrap: balance; }
+  .hero .sub { color: var(--muted); max-width: 52ch; }
+  .chain-art { width: 100%; max-width: 280px; height: auto; color: var(--accent); }
+
+  .field { display: flex; flex-direction: column; gap: 6px; border: 0; padding: 0; margin: 0; min-width: 0; }
+  .field > label, .field > legend { font-weight: 500; padding: 0; }
+  .field .opt-note { color: var(--muted); font-weight: 400; }
+  input[type="text"] { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; width: 100%; box-sizing: border-box; }
+  .seg { display: flex; flex-wrap: wrap; gap: 8px; }
+  .seg label { position: relative; }
+  .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .seg span { display: block; border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; background: var(--bg); font-variant-numeric: tabular-nums; }
+  .seg input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 10px 18px; font-weight: 500; }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn[disabled] { opacity: .45; cursor: default; }
+  .btn.link { border: 0; background: none; padding: 6px 2px; color: var(--muted); text-decoration: underline; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .note { color: var(--muted); font-size: 14px; }
+
+  .q h2 { font-size: 20px; line-height: 1.35; font-weight: 600; text-wrap: pretty; }
+  .q h2:focus { outline: none; }
+  .opts { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .opt { display: grid; grid-template-columns: auto auto 1fr; gap: 12px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; cursor: pointer; background: var(--surface); }
+  .opt:hover { border-color: var(--muted); }
+  .opt.sel { background: var(--sel); border-color: var(--accent); }
+  .opt.right { background: var(--ok-bg); border-color: var(--ok-solid); }
+  .opt.wrong { background: var(--bad-bg); border-color: var(--bad-solid); }
+  .opt.done { cursor: default; }
+  .fb { border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .fb.ok { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-solid); }
+  .fb.bad { background: var(--bad-bg); color: var(--bad); border: 1px solid var(--bad-solid); }
+  .fb b { font-weight: 600; }
+  .opt input { margin: 3px 0 0; width: 18px; height: 18px; accent-color: var(--accent); }
+  .opt .key { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .opt .txt { min-width: 0; overflow-wrap: anywhere; }
+  .pager { display: flex; justify-content: space-between; gap: 10px; }
+
+  .chain h3 { font-size: 14px; font-weight: 500; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .dots { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dot { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--line); background: transparent; color: var(--muted); font: 500 11px var(--font-mono); display: grid; place-items: center; padding: 0; font-variant-numeric: tabular-nums; }
+  .dot.answered { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .dot.ok { background: var(--ok-solid); border-color: var(--ok-solid); color: var(--on-solid); }
+  .dot.bad { background: var(--bad-solid); border-color: var(--bad-solid); color: var(--on-solid); }
+  .dot.skip { border-style: dashed; border-color: var(--muted); }
+  .dot.current { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .confirm { border: 1px solid var(--accent); background: var(--sel); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  .score .big { font: 500 clamp(44px, 14vw, 72px)/1 var(--font-mono); font-variant-numeric: tabular-nums; }
+  .score .big small { font-size: .45em; color: var(--muted); }
+  .score .who { color: var(--muted); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+  .stat { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .stat b { display: block; font: 500 22px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 13px; color: var(--muted); }
+  .copybox { width: 100%; box-sizing: border-box; font: 14px/1.4 var(--font-mono); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; resize: none; }
+
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filters .btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .review { display: flex; flex-direction: column; gap: 12px; }
+  .ritem { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; scroll-margin-top: 12px; }
+  .ritem header { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; }
+  .badge { font: 500 12px var(--font-mono); letter-spacing: .04em; padding: 2px 8px; border-radius: 99px; }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  .badge.bad { background: var(--bad-bg); color: var(--bad); }
+  .badge.skip { background: var(--bg); color: var(--muted); border: 1px dashed var(--muted); }
+  .ritem .qt { font-weight: 600; text-wrap: pretty; }
+  .ritem ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .ritem li { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-width: 0; }
+  .ritem li span:first-child { min-width: 0; overflow-wrap: anywhere; }
+  .ritem li.right { background: var(--ok-bg); border-color: var(--ok-solid); }
+  .ritem li.wrong { background: var(--bad-bg); border-color: var(--bad-solid); }
+  .ritem li .tag { white-space: nowrap; font-size: 12px; }
+  .ritem li.right .tag { color: var(--ok); }
+  .ritem li.wrong .tag { color: var(--bad); }
+
+  @media (max-width: 480px) {
+    .card { padding: 16px; }
+    .q h2 { font-size: 18px; }
+    .ritem li { flex-direction: column; gap: 2px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .opt, .btn, .dot { transition: background-color .12s, border-color .12s; }
+  }
+</style>
+
+<main class="wrap" id="app" aria-live="polite"></main>
+
+<script>
+/* Question bank: [number in the source file, text, options, indexes of correct options] */
+const BANK = [[1,"Серосодержащие аминокислоты:",["серин","аланин","метионин","пролин"],[2]],[2,"Незаменимые аминокислоты:",["аланин","глицин","лизин","серин"],[2]],[3,"Аминокислоты содержат гидроксильную группу:",["тирозин","триптофан","треонин","аргинин"],[0,2]],[4,"Отрицательно заряженные аминокислоты:",["тирозин","аспартат","глутамин","гистидин"],[1]],[5,"Связь, соединяющая аминокислоты в молекуле белка:",["водородная","ионная","дисульфидная","пептидная"],[3]],[6,"Молекула пептида построена из:",["жирных кислот","глюкозы","нуклеотидов","аминокислот"],[3]],[7,"Методы разделения пептидов:",["центрифугирование","хроматография","колориметрия","электрофорез"],[1,3]],[8,"Автор пептидной теории строения белка:",["Сенгер","Полинг","Кори","Фишер"],[3]],[9,"Аминокислотная последовательность впервые расшифрована для:",["гемоглобина","коллагена","миоглобина","инсулина"],[3]],[10,"Гиперпротеинемия наблюдается при:",["нефрозах","миеломной болезни","гепатите, циррозе","дегидратации организма"],[1,3]],[11,"Белок имеет молекулярную массу:",["500-1200 Дальтон","1000-2500 Дальтон","2000-5000 Дальтон","более 6000 Дальтон"],[3]],[12,"Методы определения молекулярной массы белков:",["ультрацентрифугирование","колориметрия","высаливание","гель-фильтрация"],[0,3]],[13,"Ароматические аминокислоты:",["тирозин","лизин","триптофан","аргинин"],[0,2]],[14,"При денатурации белков отмечается:",["потеря биологической активности","разрыв пептидных связей","разрушение первичной структуры","возникновение на молекуле белка заряда и гидратной оболочки"],[0]],[15,"Положительно заряженные аминокислоты:",["аспарагин","аргинин","лейцин","лизин"],[1,3]],[16,"Методы определения N-концевых аминокислот:",["рентгеноструктурный анализ","использование биуретовой реакции","Сенгера","Акабори"],[2]],[17,"Методы определения С-концевых аминокислот:",["рентгеноструктурный анализ","Эдмана","Акабори","использование карбоксипептидазы"],[2,3]],[18,"Гидрофобные (неполярные) аминокислоты:",["лизин","лейцин","аланин","аргинин"],[1,2]],[19,"Типы связей характерны для первичной структуры:",["водородная","дисульфидная","гидрофобные взаимодействия","пептидная"],[3]],[20,"Методы определения вторичной структуры белка:",["ультрацентрифугирование","рентгеноструктурный анализ","хроматография","гель-фильтрация"],[1]],[21,"Разновидности вторичной структуры белка:",["глобула","спираль","субъединица","складчатый лист"],[1,3]],[22,"Закономерности построения α-спирали:",["один виток спирали - 3,6 аминокислотных остатков","один виток спирали - 5,4 аминокислотных остатков","шаг спирали равен 0,36 нм","шаг спирали равен 0,54 нм"],[0,3]],[23,"Факторы, нарушающие спиральную структуру:",["наличие остатков аланина","наличие остатка пролина","гидрофобное взаимодействие","ионное взаимодействие"],[1]],[24,"Движущая сила в возникновении вторичной структуры белка:",["электростатическое отталкивание","способность остатков аминокислот к образованию водородных связей","гидрофобное взаимодействие","термостабильность"],[1]],[25,"Белок, обладающий самой высокой степенью α-спирализации:",["кератин","гемоглобин","миоглобин","инсулин"],[0]],[26,"Основной метод определения третичной структуры белка:",["аффинная хроматография","диск-электрофорез","гель-фильтрация","рентгеноструктурный анализ"],[3]],[27,"К фибриллярным белкам относятся:",["инсулин","гемоглобин","альбумин","коллаген"],[3]],[28,"К глобулярным белкам относятся:",["эластин","миоглобин","фиброин","гистидин"],[1]],[29,"Связи, стабилизирующие третичную структуру в глобулярных белках:",["водородные","пептидные","гидрофобные взаимодействия","фосфорнодиэфирные"],[0,2]],[30,"Движущая сила в возникновении третичной структуры:",["способность к седиментации","гидрофобные взаимодействия","взаимодействие радикалов аминокислот с Н2О","электростатическое отталкивание"],[2]],[31,"Третичная структура впервые установлена для:",["инсулина","коллагена","миоглобина","гемоглобина"],[2]],[32,"Преимущества построения белков из отдельных субъединиц:",["обеспечивает термостабильность","обеспечивает растворимость","экономит генетический материал","позволяет регулировать активность"],[2,3]],[33,"Белки, обладающие четвертичной структурой:",["протамины","гистоны","гемоглобин","альбумины"],[2]],[34,"Признаки, характерные для гистонов:",["белки растительного происхождения","изоэлектрическая точка находится в кислой среде","входит в состав нуклеопротеинов","содержат много остатков аргинина и лизина"],[2,3]],[35,"Признаки, характерные для гистонов:",["изоэлектрическая точка находится в щелочной среде","находятся в цитоплазме клеток","находятся в ядре клеток","содержат много остатков глутаминовой и аспарагиновой кислот"],[0,2]],[36,"Аминокислоты, содержащиеся в гистонах в повышенных количествах:",["лейцин","серин","фенилаланин","аргинин"],[3]],[37,"К простым белкам относятся:",["глутамин","гемоглобин","глютелины","глутатион"],[2]],[38,"Простыми белками не являются:",["склеропротеины","казеин","проламины","альбумины"],[1]],[39,"Белки, относящиеся к классу протеиноидов:",["альбумины","коллаген","казеин","глобулины"],[1]],[40,"Сложные белки:",["липопротеины","склеропротеины","глютелины","гемоглобин"],[0,3]],[41,"Казеин относится к классу:",["нуклеопротеинов","липопротеинов","фосфопротеинов","хромопротеинов"],[2]],[42,"Свойства, характерные для белков:",["амфотерность","низкое онкотическое давление","термостабильность","оптическая активность"],[0,3]],[43,"Иммуноглобулины относятся к классу:",["липопротеинов","гликопротеинов","нуклеопротеинов","фосфопротеинов"],[1]],[44,"Какие из перечисленных связей являются ковалентными:",["пептидные","гидрофобные","водородные","дисульфидные"],[0,3]],[45,"При талассемии наблюдается угнетение синтеза:",["мочевины","одной из цепей гемоглобина","гема","иммуноглобулинов"],[1]],[46,"При серповидноклеточной анемии нарушается структура:",["альбуминов","глобулинов","гемоглобина","иммуноглобулинов"],[2]],[47,"К пептидам относятся:",["гастрин","церулоплазмин","глутатион","пепсин"],[0,2]],[48,"В белках содержание углерода составляет:",["10 – 20 %","35 – 40 %","51 – 55 %","60 – 70 %"],[2]],[49,"В белках содержание азота составляет:",["5 – 10 %","15 – 18 %","25 – 30 %","35 – 40 %"],[1]],[50,"Гормоны, имеющие пептидную структуру:",["тироксин","окситоцин","вазопрессин","адреналин"],[1,2]],[51,"В белке, имеющем четвертичную структуру, полипептидную цепь называют:",["протромбин","домен","протомер","мономер"],[2]],[52,"К пептидам относятся:",["альбумин","ангиотензин","секретин","глютелин"],[1,2]],[53,"К гистонам относятся:",["сложные белки","простые белки","пептиды","аминокислоты"],[1]],[54,"Фолдинг белков – это:",["расщепление на пептиды","присоединение к лиганду","сворачивание полипептидной цепи","выпадение в осадок"],[2]],[55,"Олигомерные белки состоят из:",["одной полипептидной цепи","двух и более полипептидных цепей","белковой и небелковой части","одной глобулы"],[1]],[56,"При серповидноклеточной анемии в молекуле гемоглобина меняются:",["в α-цепи глутамин на валин","в β-цепи глутаминовая кислота на лейцин","в α-цепи глутаминовая кислота на валин","в β-цепи глутаминовая кислота на валин"],[3]],[57,"Какой закон положен в основу колориметрического метода анализа?",["Ньютона","Ламберта-Бугера-Бера","Авогадро","Фарадея"],[1]],[58,"Универсальные реакции на белки и аминокислоты:",["ксантопротеиновая","нингидриновая","Фоля","биуретовая"],[1,3]],[59,"Положительную биуретовую реакцию дают вещества, содержащие минимум пептидных связей:",["одну","две","три","пять"],[1]],[60,"Принцип ксантопротеиновой реакции основан на:",["образовании комплекса Руэмана","образовании осадка сульфида свинца","нитровании бензольного кольца","образовании комплекса с ионами меди"],[2]],[61,"Нормальное содержание общего белка в сыворотке крови:",["20 – 30 г/л","40 – 50 г/л","65 – 85 г/л","90 – 100 г/л"],[2]],[62,"Гипопротеинемия наблюдается при:",["миеломной болезни","хронических нефритах","алиментарной дистрофии","дегидратации организма"],[1,2]],[63,"Какие вещества используют для высаливания белков?",["сульфат аммония","сахарозу","соли тяжелых металлов","NaCl"],[0,3]],[64,"При высаливании белков происходит:",["увеличение заряда","устранение заряда","дегидратация молекулы","разрыв пептидных связей"],[1,2]],[65,"Для очистки раствора белка от низкомолекулярных примесей можно использовать:",["высаливание","ультрацентрифугирование","секвенирование","диализ"],[3]],[66,"Метод гель-фильтрации основан на:",["различиях молекулярной массы","различиях величин заряда","различиях размеров молекул","различиях растворимости"],[0,2]],[67,"Метод аффинной хроматографии основан на свойствах белков:",["амфотерности","способности к ионизации","величине молекулярной массы","специфическом взаимодействии с лигандами"],[3]],[68,"Конечными продуктами гидролиза простого белка являются:",["нуклеотиды","азотистые основания","аминокислоты","пептиды"],[2]],[69,"Гидролиз белков могут вызывать:",["соли тяжелых металлов","кислоты","сульфат аммония","трипсин"],[1,3]],[70,"Принцип метода биуретовой реакции заключается в:",["образовании комплекса Руэмана","образовании осадка сульфида свинца","нитровании ароматических аминокислот","образовании комплекса с ионами меди"],[3]],[71,"В полунасыщенном растворе сульфата аммония выпадают в осадок:",["альбумины","глобулины","протамины","гистоны"],[1]],[72,"При денатурации белков происходит изменение следующих свойств:",["молекулярной массы","растворимости","биологической активности","первичной структуры"],[1,2]],[73,"Какие из отмеченных свойств характерны для нативных белков:",["специфичность взаимодействия с лигандом","способность проходить через мембраны","низкое онкотическое давление","электрофоретическая подвижность"],[0,3]],[74,"Для денатурированных белков характерно:",["олигомерная структура","сохранение пептидных связей","потеря первичной структуры","разрыв пептидных связей"],[1]],[75,"При недостаточности витамина С нарушено образование:",["миоглобина","инсулина","коллагена","гемоглобина"],[2]],[76,"Ферменты денатурируют при температуре:",["10 – 20°С","80 – 100°С","20 – 30°С","30 – 40°С"],[1]],[77,"Оптимальная температура для действия ферментов:",["50 – 60°С","15 – 20°С","80 – 100°С","35 – 40°С"],[3]],[78,"Активатором амилазы слюны является:",["CuSO4","NaCl","NaOH","HCl"],[1]],[79,"Амилаза слюны катализирует расщепление:",["триглицеридов","нуклеопротеинов","крахмала","гликогена"],[2,3]],[80,"Активность амилазы мочи по Каравею в норме составляет:",["16 – 30 г/ч·л","3 – 5 г/ч·л","16 – 64 г/ч·л","28 – 160 г/ч·л"],[3]],[81,"Активность амилазы мочи повышается при:",["раке предстательной железы","эпидемическом паротите","панкреатите","инфаркте миокарда"],[1,2]],[82,"Активаторами панкреатической липазы являются:",["HCl","желчные кислоты","фактор Кастла","реннин"],[1]],[83,"В насыщенном растворе сульфата аммония выпадают в осадок:",["альбумины","глобулины","протамины","гистоны"],[0]],[84,"В насыщенном растворе хлорида натрия выпадают в осадок:",["альбумины","глобулины","протамины","гистоны"],[1]],[85,"Нингидриновая реакция открывает в белках:",["пептидные связи","ароматические аминокислоты","аминогруппу в α-положении аминокислот","аминокислоты, содержащие слабо связанную серу"],[2]],[86,"Наличие каких аминокислот в белке доказывает ксантопротеиновая реакция:",["серина","аланина","триптофана","цистеина"],[2]],[87,"Глобулины выпадают в осадок:",["в насыщенном растворе сульфата аммония","в полунасыщенном растворе сульфата аммония","в насыщенном растворе хлорида натрия","в полунасыщенном растворе хлорида натрия"],[1,2]],[88,"Альбумины выпадают в осадок:",["в насыщенном растворе сульфата аммония","в полунасыщенном растворе сульфата аммония","в насыщенном растворе хлорида натрия","в полунасыщенном растворе хлорида натрия"],[0]],[89,"Принцип метода нингидриновой реакции заключается в:",["образовании комплекса Руэмана","образовании осадка сульфида свинца","нитровании ароматических аминокислот","образовании комплекса с ионами меди"],[0]],[90,"Принцип метода реакции Фоля заключается в:",["образовании комплекса Руэмана","образовании осадка сульфида свинца","нитровании ароматических аминокислот","образовании комплекса с ионами меди"],[1]],[91,"Биуретовая реакция открывает в белках:",["ароматические аминокислоты","аминогруппу в α-положении аминокислот","пептидные связи","аминокислоты, содержащие слабо связанную серу"],[2]],[92,"Реакция Фоля открывает в белках:",["ароматические аминокислоты","аминогруппу в α-положении аминокислот","пептидные связи","аминокислоты, содержащие слабо связанную серу"],[3]],[93,"Аминокислоты, которые обнаруживаются в белках при помощи реакции Фоля:",["треонин","метионин","серин","цистеин"],[3]],[94,"Положительную биуретовую реакцию дают:",["свободные аминокислоты","дипептиды","полипептиды","дезоксирибонуклеопротеины"],[2,3]],[95,"Часть сложного фермента, прочно связанная с белковой частью называется:",["кофермент","холофермент","апофермент","простетическая группа"],[3]],[96,"Спектрофотометрический метод количественного определения белка в растворе основан на:",["цветных реакциях на белки и аминокислоты","способности белков перемещаться в электрическом поле","явлении светорассеяния","способности белков к поглощению УФ-лучей при 280 нм"],[3]],[97,"Расположение ионов в ряду Гофмейстера основано на свойстве:",["растворимости","дегидратирующей способности","электрофоретической подвижности","денатурирующей способности"],[1]],[98,"Свойства, характерные для ферментов и неорганических катализаторов:",["не сдвигают равновесия реакции","высокая специфичность","не расходуются в процессе реакции","активность не зависит от температуры"],[0,2]],[99,"Большинство ферментов проявляет максимальную активность при pH:",["1,5 – 2,0","8,0 – 9,0","6,0 – 8,0","только при 7,0"],[2]],[100,"Доказательством белковой природы ферментов является:",["аминокислотный состав","имеют первичную структуру","денатурируют под действием экстремальных воздействий","имеют низкую молекулярную массу"],[0,2]],[101,"Константа Михаэлиса численно равна:",["концентрации продуктов ферментативной реакции","концентрации субстрата, при которой скорость реакции равна максимальной скорости","концентрации субстрата, при которой скорость данной реакции равна половине максимальной","концентрации кофермента"],[2]],[102,"Уравнение Михаэлиса-Ментен выражает зависимость скорости ферментативной реакции от концентрации:",["продукта","кофактора","субстрата","фермента"],[2]],[103,"Превращение субстрата в продукт осуществляется:",["всей поверхностью молекулы фермента","аллостерическим центром","каталитическим участком активного центра","центром связывания с субстратом"],[2]],[104,"Оксидоредуктазы катализируют:",["окислительно-восстановительные реакции","реакции межмолекулярного переноса групп атомов и радикалов","реакции расщепления внутримолекулярных связей органических веществ при участии молекулы воды","присоединение групп по двойным связям"],[0]],[105,"Трансферазы катализируют:",["окислительно-восстановительные реакции","реакции межмолекулярного переноса групп атомов и радикалов","реакции расщепления внутримолекулярных связей органических веществ при участии молекулы воды","присоединение групп по двойным связям"],[1]],[106,"Гидролазы катализируют:",["окислительно-восстановительные реакции","реакции межмолекулярного переноса групп атомов и радикалов","реакции расщепления внутримолекулярных связей органических веществ при участии молекулы воды","присоединение групп по двойным связям"],[2]],[107,"Лиазы катализируют:",["перенос электронов, окислительно-восстановительные реакции","реакции межмолекулярного переноса групп атомов и радикалов","реакции расщепления внутримолекулярных связей органических веществ при участии молекулы воды","присоединение групп по двойным связям"],[3]],[108,"К классу изомераз относятся:",["эстераза","мутаза","фосфатаза","каталаза"],[1]],[109,"Лигазы катализируют:",["перенос групп (с участием молекул воды)","присоединение групп по двойным связям","реакции изомеризации молекул","образование новых связей, сопряжённых с расходованием АТФ"],[3]],[110,"Особенности, отличающие ферменты от неорганических катализаторов:",["термостабильность","высокая субстратная специфичность","расходуются в результате катализа","зависимость от активаторов и ингибиторов"],[1,3]],[111,"Скорость ферментативных реакций зависит от:",["концентрации субстрата","концентрации фермента","молекулярной массы фермента","молекулярной массы субстрата"],[0,1]],[112,"Международная единица активности фермента – это такое его количество, которое нарабатывает:",["1 моль продукта за 1 минуту","1 мкмоль продукта за 1 минуту","1 мкмоль продукта за 1 секунду","1 моль продукта за 1 секунду"],[1]],[113,"В сложном ферменте небелковая часть называется:",["холофермент","апофермент","кофермент","кофактор"],[3]],[114,"Изоферменты – это формы ферментов, которые:",["катализируют разные реакции","катализируют одну и ту же реакцию","различаются по физико-химическим свойствам","не различаются по физико-химическим свойствам"],[1,2]],[115,"Конкурентный ингибитор фермента:",["уменьшает Vmax, но не изменяет Кm","увеличивает Vmax, но не изменяет Кm","увеличивает как Кm, так и Vmax","увеличивает Кm, но не изменяет Vmax"],[3]],[116,"Аллостерические ферменты отличаются от простых:",["кинетикой реакций","наличием регуляторного центра","наличием доменной структуры","наличием нативной формы только в третичной структуре"],[0,1]],[117,"К аллостерической регуляции активности ферментов относится:",["индукция и репрессия","ограниченный протеолиз","компартментализация","ретроингибирование"],[3]],[118,"Максимальная активность фермента лактатдегидрогеназы наблюдается в:",["предстательной железе","печени","миокарде","костной ткани"],[1,2]],[119,"При инфаркте миокарда повышается активность:",["аспартатаминотрансферазы","карбамоилфосфатсинтетазы","креатинкиназы МВ","креатинкиназы ВВ"],[0,2]],[120,"Ферменты, обладающие относительной (групповой) специфичностью:",["липаза","пепсин","уреаза","гистидаза"],[0,1]],[121,"Чем выше константа Михаэлиса, тем сродство фермента к субстрату:",["выше","ниже","остается неизменным"],[1]],[122,"Ферменты влияют на энергию активации:",["увеличивают","уменьшают","не изменяют"],[1]],[123,"График уравнения Лайнуивера-Берка позволяет точно определить:",["концентрацию фермента","концентрацию субстрата","рН оптимум","константу Михаэлиса"],[3]],[124,"Ковалентная модификация фермента происходит при:",["индукции и репрессии","протеолизе ограниченном","фосфорилировании и дефосфорилировании","ретроингибировании"],[1,2]],[125,"При неконкурентном ингибировании:",["Vmax снижается","Кm увеличивается","Vmax не изменяется","Кm не изменяется"],[0,3]],[126,"Образование какого белка будет нарушаться при гиповитаминозе витамина С:",["миоглобина","инсулина","коллагена","гемоглобина"],[2]]];
+
+const KEY = 'biochem-test-session-v1';
+const SIG = BANK.length + ':' + BANK[0][1];
+const app = document.getElementById('app');
+let S = loadSession() || { phase: 'start', name: '', count: BANK.length };
+let timerId = null;
+let filter = 'all';
+
+/* ---------- helpers ---------- */
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function rnd(n) {
+  try { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; } catch (e) { return Math.floor(Math.random() * n); }
+}
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function fmtTime(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = s % 60;
+  const p = n => String(n).padStart(2, '0');
+  return (h ? h + ':' : '') + p(m) + ':' + p(r);
+}
+function plural(n, one, few, many) {
+  const m = n % 100, d = n % 10;
+  if (m >= 11 && m <= 14) return many;
+  return d === 1 ? one : (d >= 2 && d <= 4 ? few : many);
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(Object.assign({}, S, { sig: SIG, confirm: false }))); } catch (e) {} }
+function clearSession() { try { localStorage.removeItem(KEY); } catch (e) {} }
+function loadSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (s && s.sig === SIG && (s.phase === 'test' || s.phase === 'result') && Array.isArray(s.items)) { s.confirm = false; return s; }
+  } catch (e) {}
+  return null;
+}
+function isRight(k) {
+  const a = S.answers[k], c = BANK[S.items[k].q][3];
+  return a.length === c.length && c.every(x => a.includes(x));
+}
+function grade() {
+  let ok = 0, skip = 0;
+  S.items.forEach((_, k) => { if (!S.answers[k].length) skip++; else if (isRight(k)) ok++; });
+  return { ok, skip, bad: S.items.length - ok - skip, total: S.items.length };
+}
+
+/* ---------- start ---------- */
+function newTest(indexes, name, mode) {
+  const items = indexes.map(i => ({ q: i, order: shuffle(BANK[i][2].map((_, j) => j)) }));
+  S = { phase: 'test', name: name || '', mode: mode || 'practice', count: items.length, items, answers: items.map(() => []), checked: items.map(() => false), cur: 0, t0: Date.now(), t1: null };
+  save(); render(); window.scrollTo(0, 0);
+}
+
+const CHAIN_SVG = '<svg class="chain-art" viewBox="0 0 280 44" role="img" aria-label="Цепочка аминокислотных остатков"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 26 L58 14 L98 30 L138 14 L178 30 L218 14 L258 28" opacity=".55"/><circle cx="18" cy="26" r="7" fill="currentColor"/><circle cx="58" cy="14" r="7"/><circle cx="98" cy="30" r="7" fill="currentColor"/><circle cx="138" cy="14" r="7"/><circle cx="178" cy="30" r="7" fill="currentColor"/><circle cx="218" cy="14" r="7"/><circle cx="258" cy="28" r="7" fill="currentColor"/></g></svg>';
+
+function renderStart() {
+  const opts = [20, 30, 50, BANK.length];
+  app.innerHTML = `
+    <div class="top"><span class="mark">Биохимия</span><span class="mark">${BANK.length} ${plural(BANK.length, 'вопрос', 'вопроса', 'вопросов')} в банке</span></div>
+    <section class="card hero">
+      ${CHAIN_SVG}
+      <h1>Тест по биохимии</h1>
+      <p class="sub">Педиатрический факультет. Вопросы и варианты ответов каждый раз идут в новом порядке, в режиме тренировки правильный ответ показывается сразу после ответа, в режиме экзамена разбор появляется после завершения.</p>
+      <form id="startForm" class="card" style="padding:16px;background:var(--bg)">
+        <div class="field"><label for="nm">Имя <span class="opt-note">(необязательно, попадёт в строку с результатом)</span></label>
+          <input type="text" id="nm" maxlength="60" autocomplete="name" value="${esc(S.name || '')}"></div>
+        <fieldset class="field"><legend>Сколько вопросов</legend>
+          <div class="seg">${opts.map((n, i) => `<label><input type="radio" name="cnt" value="${n}" ${n === BANK.length ? 'checked' : ''}><span>${i === opts.length - 1 ? 'Все ' + n : n}</span></label>`).join('')}</div></fieldset>
+        <fieldset class="field"><legend>Режим</legend>
+          <div class="seg"><label><input type="radio" name="mode" value="practice" ${S.mode !== 'exam' ? 'checked' : ''}><span>Тренировка: правильный ответ сразу</span></label><label><input type="radio" name="mode" value="exam" ${S.mode === 'exam' ? 'checked' : ''}><span>Экзамен: разбор в конце</span></label></div></fieldset>
+        <div class="row"><button class="btn primary" type="submit">Начать тест</button></div>
+      </form>
+      <p class="note">Вопрос засчитывается, если отмечены все верные варианты и нет лишних. В вопросах с несколькими ответами число верных указано над вариантами.</p>
+    </section>`;
+}
+
+/* ---------- test ---------- */
+function dotClass(k) {
+  if (S.phase === 'result') return isRight(k) ? 'ok' : (S.answers[k].length ? 'bad' : 'skip');
+  const cur = k === S.cur ? ' current' : '';
+  if (S.mode === 'practice' && S.checked && S.checked[k]) return (isRight(k) ? 'ok' : 'bad') + cur;
+  return (S.answers[k].length ? 'answered' : '') + cur;
+}
+function dotsHtml() {
+  return S.items.map((_, k) => `<button type="button" class="dot ${dotClass(k)}" data-act="goto" data-i="${k}" aria-label="Вопрос ${k + 1}"${k === S.cur && S.phase === 'test' ? ' aria-current="true"' : ''}>${k + 1}</button>`).join('');
+}
+function answeredCount() { return S.answers.filter(a => a.length).length; }
+
+function renderTest() {
+  const total = S.items.length, k = S.cur, it = S.items[k], q = BANK[it.q], need = q[3].length, a = S.answers[k];
+  const type = need > 1 ? 'checkbox' : 'radio';
+  const done = S.mode === 'practice' && !!(S.checked && S.checked[k]);
+  const right = isRight(k);
+  const left = total - answeredCount();
+  app.innerHTML = `
+    <div class="top"><span class="mark">Вопрос <b>${k + 1}</b> из ${total}</span><span class="timer" id="timer">${fmtTime(Date.now() - S.t0)}</span></div>
+    <section class="card q">
+      <p class="hint">${need > 1 ? 'Выберите ' + need + ' ответа' : 'Выберите 1 ответ'}${S.mode === 'practice' && !done ? ' · проверка сразу' : ''}</p>
+      <h2 id="qt" tabindex="-1">${esc(q[1])}</h2>
+      <fieldset class="opts" aria-labelledby="qt">
+        ${it.order.map((oi, pos) => `<label class="opt${done ? ' done' + (q[3].includes(oi) ? ' right' : (a.includes(oi) ? ' wrong' : '')) : (a.includes(oi) ? ' sel' : '')}"><input type="${type}" name="opt" value="${oi}"${a.includes(oi) ? ' checked' : ''}${done ? ' disabled' : ''}><span class="key">${pos + 1}</span><span class="txt">${esc(q[2][oi])}</span></label>`).join('')}
+      </fieldset>
+      ${done ? `<div class="fb ${right ? 'ok' : 'bad'}" role="status"><b>${right ? 'Верно' : 'Неверно'}</b>${right ? '' : '<span>Правильно: ' + q[3].map(i => esc(q[2][i])).join('; ') + '</span>'}</div>` : ''}
+    </section>
+    <div class="pager">
+      <button class="btn" type="button" data-act="prev"${k === 0 ? ' disabled' : ''}>Назад</button>
+      ${k === total - 1 ? '<button class="btn primary" type="button" data-act="finish">Завершить</button>' : '<button class="btn primary" type="button" data-act="next">Далее</button>'}
+    </div>
+    ${S.confirm ? `<div class="confirm" role="alertdialog" aria-label="Завершить тест">
+      <p><b>${left ? 'Без ответа: ' + left + '.' : 'На все вопросы есть ответы.'}</b> Завершить тест и показать результат?</p>
+      <div class="row"><button class="btn primary" type="button" data-act="finish-yes">Завершить</button><button class="btn" type="button" data-act="finish-no">Вернуться к вопросам</button><button class="btn link" type="button" data-act="abort">Отменить попытку</button></div></div>` : ''}
+    <section class="chain card">
+      <h3><span>Все вопросы</span><span class="legend" id="legend">отвечено ${answeredCount()} из ${total}</span></h3>
+      <div class="dots" id="dots">${dotsHtml()}</div>
+      <div class="row"><button class="btn" type="button" data-act="finish">Завершить тест</button></div>
+    </section>`;
+  clearInterval(timerId);
+  timerId = setInterval(() => { const t = document.getElementById('timer'); if (t && S.phase === 'test') t.textContent = fmtTime(Date.now() - S.t0); }, 1000);
+}
+function refreshDots() {
+  const d = document.getElementById('dots'); if (!d) return;
+  d.querySelectorAll('.dot').forEach((b, k) => { b.className = 'dot ' + dotClass(k); });
+  const l = document.getElementById('legend'); if (l) l.textContent = 'отвечено ' + answeredCount() + ' из ' + S.items.length;
+}
+function go(i) {
+  if (S.phase !== 'test') return;
+  S.cur = Math.min(Math.max(i, 0), S.items.length - 1); S.confirm = false; save(); render();
+  window.scrollTo(0, 0); const h = document.getElementById('qt'); if (h) h.focus({ preventScroll: true });
+}
+
+/* ---------- result ---------- */
+function resultText(g) {
+  const pct = Math.round(g.ok / g.total * 100);
+  const d = new Date(S.t1).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return (S.name ? S.name + ': ' : '') + 'Биохимия, ' + g.ok + ' из ' + g.total + ' (' + pct + '%), ' + d + ', время ' + fmtTime(S.t1 - S.t0);
+}
+function reviewHtml() {
+  const rows = [];
+  S.items.forEach((it, k) => {
+    const st = isRight(k) ? 'ok' : (S.answers[k].length ? 'bad' : 'skip');
+    if (filter === 'bad' && st === 'ok') return;
+    const q = BANK[it.q], a = S.answers[k];
+    const label = { ok: 'Верно', bad: 'Неверно', skip: 'Нет ответа' }[st];
+    rows.push(`<article class="ritem" id="r${k}"><header><span class="badge ${st}">${label}</span><span class="tag">вопрос ${k + 1} · №${q[0]} в банке</span></header>
+      <p class="qt">${esc(q[1])}</p>
+      <ul>${it.order.map(oi => {
+        const right = q[3].includes(oi), chosen = a.includes(oi);
+        const cls = right ? 'right' : (chosen ? 'wrong' : '');
+        const tag = right ? (chosen ? '✓ ваш ответ, верно' : 'верный ответ') : (chosen ? '✗ ваш ответ' : '');
+        return `<li class="${cls}"><span>${esc(q[2][oi])}</span>${tag ? `<span class="tag">${tag}</span>` : ''}</li>`;
+      }).join('')}</ul></article>`);
+  });
+  return rows.length ? rows.join('') : '<p class="note">Ошибок нет.</p>';
+}
+function renderResult() {
+  clearInterval(timerId); timerId = null;
+  const g = grade(), pct = Math.round(g.ok / g.total * 100), wrong = g.bad + g.skip;
+  app.innerHTML = `
+    <div class="top"><span class="mark">Результат</span><span class="timer">время ${fmtTime(S.t1 - S.t0)}</span></div>
+    <section class="card score">
+      ${S.name ? `<p class="who">${esc(S.name)}</p>` : ''}
+      <p class="big">${g.ok}<small> / ${g.total}</small></p>
+      <p><b>${pct}%</b> верных ответов</p>
+      <div class="stats">
+        <div class="stat"><b>${g.ok}</b><span>верно</span></div>
+        <div class="stat"><b>${g.bad}</b><span>неверно</span></div>
+        <div class="stat"><b>${g.skip}</b><span>без ответа</span></div>
+      </div>
+      <div class="row">
+        <button class="btn primary" type="button" data-act="copy">Скопировать результат</button>
+        ${wrong ? `<button class="btn" type="button" data-act="retry-wrong">Повторить ${wrong} ${plural(wrong, 'вопрос', 'вопроса', 'вопросов')} с ошибками</button>` : ''}
+        <button class="btn" type="button" data-act="again">Пройти заново</button>
+      </div>
+      <div id="copyArea" hidden></div>
+    </section>
+    <section class="chain card"><h3><span>Карта ответов</span><span class="legend">зелёный верно · красный неверно · пунктир без ответа</span></h3><div class="dots">${dotsHtml()}</div></section>
+    <div class="filters" role="group" aria-label="Фильтр разбора">
+      <button class="btn" type="button" data-act="filter" data-f="all" aria-pressed="${filter === 'all'}">Все вопросы (${g.total})</button>
+      <button class="btn" type="button" data-act="filter" data-f="bad" aria-pressed="${filter === 'bad'}">Только ошибки (${wrong})</button>
+    </div>
+    <div class="review" id="review">${reviewHtml()}</div>`;
+}
+
+function render() {
+  clearInterval(timerId); timerId = null;
+  if (S.phase === 'test') renderTest(); else if (S.phase === 'result') renderResult(); else renderStart();
+}
+
+/* ---------- events ---------- */
+app.addEventListener('submit', e => {
+  if (e.target.id !== 'startForm') return;
+  e.preventDefault();
+  const name = document.getElementById('nm').value.trim().slice(0, 60);
+  const n = +e.target.elements.cnt.value || BANK.length;
+  newTest(shuffle(BANK.map((_, i) => i)).slice(0, n), name, e.target.elements.mode.value);
+});
+
+app.addEventListener('change', e => {
+  const t = e.target;
+  if (t.name !== 'opt' || S.phase !== 'test') return;
+  const k = S.cur, oi = +t.value;
+  let a = S.answers[k];
+  a = t.type === 'radio' ? [oi] : (t.checked ? Array.from(new Set(a.concat(oi))) : a.filter(x => x !== oi));
+  S.answers[k] = a;
+  if (S.mode === 'practice' && a.length >= BANK[S.items[k].q][3].length) {
+    if (!S.checked) S.checked = S.items.map(() => false);
+    S.checked[k] = true; save(); render(); return;
+  }
+  save();
+  app.querySelectorAll('.opt').forEach(l => l.classList.toggle('sel', l.querySelector('input').checked));
+  refreshDots();
+});
+
+app.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'goto') {
+    if (S.phase === 'test') go(+b.dataset.i);
+    else { filter = 'all'; render(); const r = document.getElementById('r' + b.dataset.i); if (r) r.scrollIntoView({ block: 'start' }); }
+  }
+  else if (act === 'prev') go(S.cur - 1);
+  else if (act === 'next') go(S.cur + 1);
+  else if (act === 'finish') { S.confirm = true; render(); const c = app.querySelector('.confirm'); if (c) c.scrollIntoView({ block: 'center' }); }
+  else if (act === 'finish-no') { S.confirm = false; render(); }
+  else if (act === 'finish-yes') { S.phase = 'result'; S.confirm = false; S.t1 = Date.now(); filter = 'all'; save(); render(); window.scrollTo(0, 0); }
+  else if (act === 'abort') { clearSession(); S = { phase: 'start', name: S.name, mode: S.mode, count: BANK.length }; render(); window.scrollTo(0, 0); }
+  else if (act === 'again') { clearSession(); S = { phase: 'start', name: S.name, mode: S.mode, count: BANK.length }; render(); window.scrollTo(0, 0); }
+  else if (act === 'retry-wrong') {
+    const idx = S.items.map((it, k) => isRight(k) ? -1 : it.q).filter(i => i >= 0);
+    newTest(shuffle(idx), S.name, S.mode);
+  }
+  else if (act === 'filter') { filter = b.dataset.f; render(); }
+  else if (act === 'copy') {
+    const text = resultText(grade());
+    const area = document.getElementById('copyArea');
+    const show = () => { area.hidden = false; area.innerHTML = '<textarea class="copybox" rows="2" readonly aria-label="Строка с результатом"></textarea>'; const ta = area.firstChild; ta.value = text; ta.focus(); ta.select(); };
+    try { navigator.clipboard.writeText(text).then(() => { area.hidden = false; area.innerHTML = '<p class="note">Скопировано: ' + esc(text) + '</p>'; }, show); } catch (err) { show(); }
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (S.phase !== 'test' || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.matches && e.target.matches('input[type="text"], textarea')) return;
+  if (e.key === 'Enter' && S.mode === 'practice' && S.checked && S.checked[S.cur] && e.target.tagName !== 'BUTTON') {
+    go(S.cur + 1); e.preventDefault(); return;
+  }
+  if (/^[1-9]$/.test(e.key)) {
+    const inp = app.querySelectorAll('.opt input')[+e.key - 1];
+    if (inp) { inp.click(); e.preventDefault(); }
+  } else if (e.target.tagName !== 'INPUT') {
+    if (e.key === 'ArrowRight') go(S.cur + 1); else if (e.key === 'ArrowLeft') go(S.cur - 1);
+  }
+});
+
+render();
+</script>
+
+</body></html>
